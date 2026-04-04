@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cobertura FiberFast - Mapa de zonas</title>
+  <link rel="icon" href="/assets/img/favicon/fiberfast.ico" type="image/x-icon">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
+  <link rel="stylesheet" href="/style/main.css">
+  <!-- Leaflet CSS para el mapa -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .cobertura-page {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--neutral-100) 0%, var(--neutral-50) 100%);
+      padding-top: 100px;
+      padding-bottom: var(--spacing-3xl);
+    }
+
+    .cobertura-header {
+      text-align: center;
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .cobertura-header h1 {
+      font-size: var(--font-size-4xl);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .map-container {
+      background: white;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    #map {
+      height: 500px;
+      width: 100%;
+      z-index: 1;
+    }
+
+    .zonas-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--spacing-lg);
+      margin-top: var(--spacing-2xl);
+    }
+
+    .zona-card {
+      background: white;
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-base);
+      cursor: pointer;
+    }
+
+    .zona-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .zona-card i {
+      font-size: 2rem;
+      color: var(--primary-500);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .zona-card h3 {
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .zona-card p {
+      color: var(--neutral-600);
+      font-size: var(--font-size-sm);
+    }
+
+    .zona-card.disponible {
+      border-left: 4px solid var(--success);
+    }
+
+    .zona-card.proximamente {
+      border-left: 4px solid var(--warning);
+      opacity: 0.8;
+    }
+
+    .cobertura-verificador {
+      background: white;
+      padding: var(--spacing-2xl);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      margin-top: var(--spacing-2xl);
+    }
+
+    .verificador-input-group {
+      display: flex;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-lg);
+    }
+
+    .verificador-input-group input {
+      flex: 1;
+      padding: var(--spacing-md);
+      border: 1px solid var(--neutral-300);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-base);
+    }
+
+    .resultado-cobertura {
+      margin-top: var(--spacing-lg);
+      padding: var(--spacing-md);
+      border-radius: var(--radius-md);
+      display: none;
+    }
+
+    .resultado-cobertura.success {
+      display: block;
+      background: #d4edda;
+      color: #155724;
+      border-left: 4px solid var(--success);
+    }
+
+    .resultado-cobertura.error {
+      display: block;
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid var(--error);
+    }
+
+    .badge-cobertura {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .badge-disponible {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .badge-proximamente {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    @media (max-width: 768px) {
+      .cobertura-page {
+        padding-top: 80px;
+      }
+
+      .verificador-input-group {
+        flex-direction: column;
+      }
+
+      #map {
+        height: 350px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header" role="banner">
+    <div class="container">
+      <div class="logo">
+        <a href="index.html" aria-label="FiberFast - Inicio">
+          <img src="./assets/img/logo.png" alt="FiberFast Logo" width="120" height="50">
+        </a>
+      </div>
+      <nav class="nav" aria-label="Navegación principal">
+        <ul class="nav-list" role="menubar">
+          <li role="none"><a href="index.html#home" class="nav-link" role="menuitem">Inicio</a></li>
+          <li role="none"><a href="index.html#about" class="nav-link" role="menuitem">Sobre Nosotros</a></li>
+          <li role="none"><a href="index.html#planes" class="nav-link" role="menuitem">Planes</a></li>
+          <li role="none"><a href="index.html#faq" class="nav-link" role="menuitem">FAQ</a></li>
+          <li role="none"><a href="cobertura.html" class="nav-link active" role="menuitem">Cobertura</a></li>
+          <li role="none"><a href="gestion-tickets.html" class="nav-link" role="menuitem">Soporte</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <a href="http://clientes.portalinternet.app/saldo/fiber-fast-connection/" class="btn-portal" target="_blank">
+          <i class="fas fa-user-circle"></i>
+          <span>Portal Cliente</span>
+        </a>
+        <button class="hamburger" aria-label="Menú de navegación" aria-expanded="false">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="cobertura-page">
+    <div class="container">
+      <div class="cobertura-header">
+        <h1>Mapa de <span class="highlight">Cobertura</span></h1>
+        <p>Descubre si FiberFast está disponible en tu zona</p>
+      </div>
+
+      <div class="map-container">
+        <div id="map"></div>
+      </div>
+
+      <div class="cobertura-verificador">
+        <h3><i class="fas fa-search-location"></i> Verificador de Cobertura</h3>
+        <p>Ingresa tu dirección o ciudad para verificar disponibilidad</p>
+        <div class="verificador-input-group">
+          <input type="text" id="direccion-verificar" placeholder="Ej: Soledad, Barranquilla, Malambo...">
+          <button id="btn-verificar" class="btn btn-primary">Verificar</button>
+        </div>
+        <div id="resultado-verificador" class="resultado-cobertura"></div>
+      </div>
+
+      <div class="zonas-list" id="zonas-list">
+        <!-- Las zonas se cargarán dinámicamente -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal de solicitud de plan (se abre al hacer clic en "Contratar" desde el mapa) -->
+  <div id="solicitud-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Solicitar Plan FiberFast</h3>
+        <button class="modal-close-solicitud">&times;</button>
+      </div>
+      <form id="solicitud-modal-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre completo *</label>
+            <input type="text" id="modal-nombre" required>
+          </div>
+          <div class="form-group">
+            <label>Teléfono *</label>
+            <input type="tel" id="modal-telefono" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Correo electrónico *</label>
+            <input type="email" id="modal-email" required>
+          </div>
+          <div class="form-group">
+            <label>Plan deseado *</label>
+            <select id="modal-plan" required>
+              <option value="Plan Bronce - 400 Mbps">Plan Bronce - 400 Mbps - $69.900/mes</option>
+              <option value="Plan Plata - 600 Mbps">Plan Plata - 600 Mbps - $99.900/mes</option>
+              <option value="Plan Oro - 800 Mbps">Plan Oro - 800 Mbps - $124.900/mes</option>
+              <option value="Plan Empresarial">Plan Empresarial - 200 Mbps</option>
+              <option value="Plan Empresarial Premium">Plan Empresarial Premium - 600 Mbps</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Dirección de instalación *</label>
+          <input type="text" id="modal-direccion" placeholder="Calle, número, barrio, ciudad" required>
+        </div>
+        <div class="form-group">
+          <label>Mensaje adicional (opcional)</label>
+          <textarea id="modal-mensaje" rows="3" placeholder="¿Alguna observación específica?"></textarea>
+        </div>
+        <div id="modal-mensaje-resultado"
+          style="display: none; padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md);">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fas fa-paper-plane"></i> Enviar Solicitud
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col footer-about">
+          <img src="./assets/img/logo.png" alt="FiberFast Logo" width="120" height="50">
+          <p class="footer-description">Conectando Colombia con la mejor tecnología en fibra óptica.</p>
+        </div>
+        <div class="footer-col">
+          <h3 class="footer-title">Enlaces Rápidos</h3>
+          <ul class="footer-links">
+            <li><a href="cobertura.html">Verificar Cobertura</a></li>
+            <li><a href="gestion-tickets.html">Soporte Técnico</a></li>
+            <li><a href="index.html#faq">Preguntas Frecuentes</a></li>
+            <li><a href="./page/pqrs.html">Radicar PQRS</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3 class="footer-title">Contacto</h3>
+          <p><i class="fas fa-phone-alt"></i> +57 3044614193</p>
+          <p><i class="fas fa-envelope"></i> comercial@fiberfast.com.co</p>
+          <p><i class="fas fa-map-marker-alt"></i> Soledad, Atlántico</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 <strong>FiberFast</strong>. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // Zonas de cobertura
+    const zonasCobertura = [
+      { nombre: "Soledad", disponible: true, lat: 10.9185, lng: -74.7645, municipio: "Atlántico", cobertura: "Fibra Óptica 100%" },
+      { nombre: "Barranquilla", disponible: true, lat: 10.9878, lng: -74.7889, municipio: "Atlántico", cobertura: "Fibra Óptica 100%" },
+      { nombre: "Malambo", disponible: true, lat: 10.8597, lng: -74.7752, municipio: "Atlántico", cobertura: "Fibra Óptica 100%" },
+      { nombre: "Sabanagrande", disponible: true, lat: 10.7911, lng: -74.7594, municipio: "Atlántico", cobertura: "Fibra Óptica 100%" },
+      { nombre: "Santo Tomás", disponible: true, lat: 10.7711, lng: -74.7614, municipio: "Atlántico", cobertura: "Fibra Óptica 100%" },
+      { nombre: "Palmar de Varela", disponible: true, lat: 10.7422, lng: -74.7556, municipio: "Atlántico", cobertura: "Fibra Óptica 100%" },
+      { nombre: "Campo de la Cruz", disponible: true, lat: 10.7261, lng: -74.7481, municipio: "Atlántico", cobertura: "Fibra Óptica 100%" },
+      { nombre: "Manatí", disponible: true, lat: 10.7492, lng: -74.9583, municipio: "Atlántico", cobertura: "Fibra Óptica 100%" },
+      { nombre: "Cartagena", disponible: false, lat: 10.3910, lng: -75.4794, municipio: "Bolívar", cobertura: "Próximamente", proximamente: true },
+      { nombre: "Santa Marta", disponible: false, lat: 11.2408, lng: -74.1990, municipio: "Magdalena", cobertura: "Próximamente", proximamente: true }
+    ];
+
+    let map;
+    let markers = [];
+
+    function initMap() {
+      map = L.map('map').setView([10.8, -74.8], 10);
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(map);
+
+      zonasCobertura.forEach(zona => {
+        const iconColor = zona.disponible ? '#28a745' : '#ffc107';
+        const icon = L.divIcon({
+          className: 'custom-div-icon',
+          html: `<div style="background-color: ${iconColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>`,
+          iconSize: [12, 12],
+          popupAnchor: [0, -6]
+        });
+
+        const marker = L.marker([zona.lat, zona.lng], { icon: icon })
+          .bindPopup(`
+                        <div style="text-align: center;">
+                            <strong style="font-size: 1.1rem;">${zona.nombre}</strong><br>
+                            <span style="color: ${zona.disponible ? '#28a745' : '#ffc107'}">
+                                ${zona.disponible ? '✅ Disponible' : '⏳ Próximamente'}
+                            </span><br>
+                            ${zona.disponible ?
+              `<button onclick="abrirModalSolicitud('${zona.nombre}')" style="margin-top: 8px; padding: 5px 15px; background: #4F528C; color: white; border: none; border-radius: 5px; cursor: pointer;">Contratar</button>` :
+              '<small>Próxima apertura</small>'
+            }
+                        </div>
+                    `)
+          .addTo(map);
+
+        markers.push(marker);
+      });
+    }
+
+    function renderZonas() {
+      const container = document.getElementById('zonas-list');
+      container.innerHTML = zonasCobertura.map(zona => `
+                <div class="zona-card ${zona.disponible ? 'disponible' : 'proximamente'}" onclick="abrirModalSolicitud('${zona.nombre}')">
+                    <i class="fas ${zona.disponible ? 'fa-check-circle' : 'fa-clock'}"></i>
+                    <h3>${zona.nombre}</h3>
+                    <p><strong>${zona.municipio}</strong></p>
+                    <p>${zona.cobertura}</p>
+                    <span class="badge-cobertura ${zona.disponible ? 'badge-disponible' : 'badge-proximamente'}">
+                        ${zona.disponible ? 'Disponible' : 'Próximamente'}
+                    </span>
+                </div>
+            `).join('');
+    }
+
+    function verificarDireccion() {
+      const direccion = document.getElementById('direccion-verificar').value.toLowerCase().trim();
+      const resultadoDiv = document.getElementById('resultado-verificador');
+
+      if (!direccion) {
+        resultadoDiv.className = 'resultado-cobertura error';
+        resultadoDiv.innerHTML = '❌ Por favor ingresa una dirección o ciudad.';
+        return;
+      }
+
+      const zonaEncontrada = zonasCobertura.find(zona =>
+        direccion.includes(zona.nombre.toLowerCase())
+      );
+
+      if (zonaEncontrada && zonaEncontrada.disponible) {
+        resultadoDiv.className = 'resultado-cobertura success';
+        resultadoDiv.innerHTML = `
+                    ✅ ¡Excelente! FiberFast tiene cobertura en ${zonaEncontrada.nombre}.<br>
+                    <strong>Velocidad:</strong> Hasta 800 Mbps simétricos<br>
+                    <strong>Tecnología:</strong> Fibra Óptica<br>
+                    <button onclick="abrirModalSolicitud('${zonaEncontrada.nombre}')" class="btn btn-primary" style="margin-top: 10px;">Contratar Ahora</button>
+                `;
+
+        const marker = markers.find(m => m.getPopup()?.getContent()?.includes(zonaEncontrada.nombre));
+        if (marker) {
+          map.setView([zonaEncontrada.lat, zonaEncontrada.lng], 13);
+          marker.openPopup();
+        }
+      } else if (zonaEncontrada && !zonaEncontrada.disponible) {
+        resultadoDiv.className = 'resultado-cobertura error';
+        resultadoDiv.innerHTML = `⚠️ ${zonaEncontrada.nombre} estará disponible próximamente. Déjanos tus datos y te avisaremos.`;
+        mostrarFormularioNotificacion(resultadoDiv, zonaEncontrada.nombre);
+      } else {
+        resultadoDiv.className = 'resultado-cobertura error';
+        resultadoDiv.innerHTML = '❌ Lo sentimos, aún no tenemos cobertura en tu zona. Déjanos tus datos para avisarte.';
+        mostrarFormularioNotificacion(resultadoDiv);
+      }
+    }
+
+    function mostrarFormularioNotificacion(container, zona = null) {
+      const existingForm = container.querySelector('.notificacion-form');
+      if (existingForm) return;
+
+      const formHtml = `
+                <div class="notificacion-form" style="margin-top: 15px;">
+                    <p><i class="fas fa-bell"></i> Déjanos tu correo y te avisaremos cuando lleguemos.</p>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <input type="email" id="email-notificacion" placeholder="tu@email.com" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <button id="btn-notificar" class="btn btn-secondary">Notificarme</button>
+                    </div>
+                </div>
+            `;
+      container.insertAdjacentHTML('beforeend', formHtml);
+
+      document.getElementById('btn-notificar')?.addEventListener('click', () => {
+        const email = document.getElementById('email-notificacion')?.value;
+        if (email && email.includes('@')) {
+          const notificaciones = JSON.parse(localStorage.getItem('fiberfast_notificaciones') || '[]');
+          notificaciones.push({ email, zona: zona || 'desconocida', fecha: new Date().toISOString() });
+          localStorage.setItem('fiberfast_notificaciones', JSON.stringify(notificaciones));
+          container.innerHTML += '<p style="color: green; margin-top: 10px;">✅ ¡Gracias! Te notificaremos pronto.</p>';
+          document.querySelector('.notificacion-form')?.remove();
+        } else {
+          alert('Por favor ingresa un correo válido.');
+        }
+      });
+    }
+
+    function abrirModalSolicitud(zona = '') {
+      const modal = document.getElementById('solicitud-modal');
+      const direccionInput = document.getElementById('modal-direccion');
+      if (zona && direccionInput) {
+        direccionInput.value = zona;
+      }
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarModalSolicitud() {
+      const modal = document.getElementById('solicitud-modal');
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+      document.getElementById('solicitud-modal-form')?.reset();
+    }
+
+    function guardarSolicitud(datos) {
+      const solicitudes = JSON.parse(localStorage.getItem('fiberfast_solicitudes') || '[]');
+      datos.id = Date.now();
+      datos.fecha = new Date().toISOString();
+      datos.estado = 'pendiente';
+      solicitudes.push(datos);
+      localStorage.setItem('fiberfast_solicitudes', JSON.stringify(solicitudes));
+    }
+
+    function handleSolicitudSubmit(event) {
+      event.preventDefault();
+
+      const solicitud = {
+        nombre: document.getElementById('modal-nombre').value.trim(),
+        telefono: document.getElementById('modal-telefono').value.trim(),
+        email: document.getElementById('modal-email').value.trim(),
+        plan: document.getElementById('modal-plan').value,
+        direccion: document.getElementById('modal-direccion').value.trim(),
+        mensaje: document.getElementById('modal-mensaje').value.trim(),
+        origen: 'modal_cobertura'
+      };
+
+      if (!solicitud.nombre || !solicitud.telefono || !solicitud.email || !solicitud.direccion) {
+        mostrarMensajeModal('Por favor completa todos los campos obligatorios.', 'error');
+        return;
+      }
+
+      guardarSolicitud(solicitud);
+      mostrarMensajeModal('✅ ¡Solicitud enviada con éxito! Un asesor te contactará pronto.', 'success');
+
+      setTimeout(() => {
+        cerrarModalSolicitud();
+      }, 2000);
+    }
+
+    function mostrarMensajeModal(mensaje, tipo) {
+      const msgDiv = document.getElementById('modal-mensaje-resultado');
+      msgDiv.textContent = mensaje;
+      msgDiv.style.backgroundColor = tipo === 'success' ? '#d4edda' : '#f8d7da';
+      msgDiv.style.color = tipo === 'success' ? '#155724' : '#721c24';
+      msgDiv.style.display = 'block';
+      setTimeout(() => {
+        msgDiv.style.display = 'none';
+      }, 4000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      renderZonas();
+
+      document.getElementById('btn-verificar')?.addEventListener('click', verificarDireccion);
+      document.getElementById('direccion-verificar')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') verificarDireccion();
+      });
+
+      document.querySelectorAll('.modal-close-solicitud').forEach(btn => {
+        btn.addEventListener('click', cerrarModalSolicitud);
+      });
+
+      document.getElementById('solicitud-modal-form')?.addEventListener('submit', handleSolicitudSubmit);
+
+      window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) cerrarModalSolicitud();
+      });
+    });
+  </script>
+</body>
+
+</html>

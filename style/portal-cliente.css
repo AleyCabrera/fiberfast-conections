@@ -1,0 +1,502 @@
+/* ===========================================
+    VARIABLES CSS - SISTEMA DE DISEÑO (Tuyas, sin cambios)
+=========================================== */
+:root {
+    /* Paleta de colores principal */
+    --primary-100: #E8E9F3;
+    --primary-200: #D1D3E7;
+    --primary-300: #A3A7CF;
+    --primary-400: #6B6FA3;
+    --primary-500: #4F528C;
+    --primary-600: #3A3D6B;
+    --primary-700: #2C2E50;
+    --primary-800: #1E1F38;
+    --primary-900: #14152A;
+
+    /* Colores secundarios y de acento */
+    --secondary-500: #F2C53D;
+    --secondary-600: #D9AF1F;
+    --accent-500: #25D366;
+    --accent-600: #128C7E;
+
+    /* Colores neutrales */
+    --neutral-50: #FAFAFA;
+    --neutral-100: #F8F9FA;
+    --neutral-200: #E9ECEF;
+    --neutral-300: #DEE2E6;
+    --neutral-400: #CED4DA;
+    --neutral-500: #ADB5BD;
+    --neutral-600: #6C757D;
+    --neutral-700: #495057;
+    --neutral-800: #343A40;
+    --neutral-900: #212529;
+
+    /* Colores semánticos */
+    --success: #28A745;
+    --warning: #FFC107;
+    --error: #DC3545;
+    --info: #17A2B8;
+
+    /* Sombras profesionales */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.2);
+
+    /* Bordes y radios */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 30px;
+    --radius-full: 9999px;
+
+    /* Espaciado consistente */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    --spacing-3xl: 4rem;
+
+    /* Transiciones */
+    --transition-fast: 150ms ease-in-out;
+    --transition-base: 300ms ease-in-out;
+    --transition-slow: 500ms ease-in-out;
+
+    /* Tipografía */
+    --font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Montserrat', var(--font-primary);
+    
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 2rem;
+    --font-size-4xl: 2.5rem;
+    --font-size-5xl: 3rem;
+
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Line heights */
+    --leading-tight: 1.2;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.7;
+
+    /* Z-index scale */
+    --z-base: 1;
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-fixed: 300;
+    --z-modal-backdrop: 400;
+    --z-modal: 500;
+    --z-popover: 600;
+    --z-tooltip: 700;
+}
+
+/* ===========================================
+    RESET Y BASE (Usando tus variables)
+=========================================== */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--neutral-100);
+    color: var(--neutral-800);
+    line-height: var(--leading-normal);
+}
+
+/* ===========================================
+    LAYOUT PRINCIPAL (IDÉNTICO AL REGISTRO)
+=========================================== */
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* LADO IZQUIERDO */
+.left {
+    width: 45%;
+    background: var(--neutral-50);
+    padding: var(--spacing-xl) var(--spacing-2xl);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.logo {
+    width: 120px;
+    margin-bottom: var(--spacing-lg);
+    align-self: center;
+}
+
+.titulo {
+    align-self: center;
+    font-family: var(--font-heading);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--primary-800);
+    margin-bottom: var(--spacing-xs);
+    line-height: var(--leading-tight);
+}
+
+.subtitulo {
+    align-self: center;
+    color: var(--neutral-600);
+    margin-bottom: var(--spacing-xl);
+    font-size: var(--font-size-lg);
+}
+
+/* ===========================================
+    FORMULARIO DE LOGIN (ESTILO UNIFORME)
+=========================================== */
+form {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+form label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--neutral-700);
+}
+
+form input:not([type="checkbox"]) {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--neutral-300);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-family: var(--font-primary);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    background-color: var(--neutral-50);
+    height: 42px;
+}
+
+form input:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(79, 82, 140, 0.1);
+}
+
+/* Password wrapper - adaptado del registro */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: calc(var(--spacing-2xl) + 5px);
+    height: 42px;
+}
+
+.toggle-icon { /* Cambiado de .toggle-password a .toggle-icon para que coincida con tu HTML */
+    position: absolute;
+    right: var(--spacing-sm);
+    background: none;
+    border: none;
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neutral-500);
+    transition: color var(--transition-fast);
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+}
+
+.toggle-icon:hover {
+    color: var(--primary-600);
+    background-color: var(--neutral-200);
+}
+
+/* Opciones (Recordar y Olvidé contraseña) */
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: var(--spacing-md) 0; /* Mismo espaciado que .terms en registro */
+    font-size: var(--font-size-sm);
+}
+
+.options label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-bottom: 0; /* Sobrescribe el estilo general de label */
+    font-weight: var(--font-weight-regular);
+    color: var(--neutral-600);
+    cursor: pointer;
+}
+
+.options input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-500);
+    cursor: pointer;
+}
+
+.forgot {
+    color: var(--primary-500);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    transition: color var(--transition-fast);
+}
+
+.forgot:hover {
+    color: var(--primary-700);
+    text-decoration: underline;
+}
+
+/* Botón de Ingresar (mismo estilo que .btn-register) */
+.btn-login {
+    width: 100%;
+    background: var(--primary-500);
+    color: white;
+    border: none;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    margin-top: var(--spacing-sm);
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none; /* Por si usas <a> como botón */
+}
+
+.btn-login:hover {
+    background: var(--primary-600);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Texto de ayuda para registro (mismo estilo que en registro) */
+.help {
+    text-align: center;
+    margin-top: var(--spacing-lg);
+    font-size: var(--font-size-sm);
+    color: var(--neutral-600);
+}
+
+.help a {
+    color: var(--primary-500);
+    text-decoration: none;
+    font-weight: var(--font-weight-semibold);
+    transition: color var(--transition-fast);
+}
+
+.help a:hover {
+    color: var(--primary-700);
+    text-decoration: underline;
+}
+
+/* ===========================================
+    LADO DERECHO (VIDEO) - ADAPTADO PARA TU HTML
+=========================================== */
+.right {
+    width: 55%;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--primary-900);
+}
+
+/* Video */
+.right video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background-color: var(--primary-900);
+    z-index: 1;
+}
+
+/* Overlay con gradiente */
+.right .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        135deg,
+        rgba(79, 82, 140, 0.9) 0%,
+        rgba(26, 26, 46, 0.95) 100%
+    );
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Contenido de texto sobre el video */
+.right .overlay h2 {
+    position: relative;
+    z-index: 3;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--spacing-sm);
+    font-family: var(--font-heading);
+    text-align: center;
+    top: 50%;
+    transform: translateY(-60%); /* Ajuste fino para centrar el texto */
+    width: 100%;
+    padding: 0 var(--spacing-md);
+}
+
+.right .overlay h1 {
+    position: relative;
+    z-index: 3;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    font-size: var(--font-size-4xl); /* Un poco más pequeño que en landing para adaptarse */
+    font-weight: var(--font-weight-bold);
+    font-family: var(--font-heading);
+    line-height: var(--leading-tight);
+    text-align: center;
+    top: 50%;
+    transform: translateY(-40%); /* Ajuste fino para centrar el texto */
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Animación sutil para el video */
+.right video {
+    animation: slowZoom 20s infinite alternate ease-in-out;
+}
+
+@keyframes slowZoom {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.05);
+    }
+}
+
+/* ===========================================
+    RESPONSIVO (Usando variables)
+=========================================== */
+@media (max-width: 1024px) {
+    .left {
+        padding: var(--spacing-xl);
+    }
+    
+    .right .overlay h1 {
+        font-size: var(--font-size-3xl);
+    }
+    
+    .right .overlay h2 {
+        font-size: var(--font-size-xl);
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .left, .right {
+        width: 100%;
+    }
+    
+    .left {
+        padding: var(--spacing-xl);
+        min-height: auto;
+        justify-content: flex-start;
+    }
+    
+    .right {
+        min-height: 400px;
+        order: -1;
+    }
+
+    .right .overlay h1 {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .right .overlay h2 {
+        font-size: var(--font-size-lg);
+    }
+    
+    .logo {
+        width: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .left {
+        padding: var(--spacing-lg);
+    }
+    
+    .titulo {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .subtitulo {
+        font-size: var(--font-size-base);
+    }
+    
+    .options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    form input:not([type="checkbox"]) {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .btn-login {
+        padding: var(--spacing-md);
+        font-size: var(--font-size-base);
+    }
+}
+
+/* Ajuste para pantallas muy altas */
+@media (min-height: 900px) {
+    .left {
+        justify-content: center;
+    }
+}

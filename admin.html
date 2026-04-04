@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Administrador - FiberFast</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+<div class="admin-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="img/logo.png" alt="FiberFast">
+            <h2>Admin</h2>
+        </div>
+
+        <nav>
+            <ul>
+                <li class="active" data-section="dashboard"><i class="fas fa-chart-line"></i> Dashboard</li>
+                <li data-section="usuarios"><i class="fas fa-users"></i> Usuarios</li>
+                <li data-section="tickets"><i class="fas fa-headset"></i> Tickets</li>
+                <li data-section="pagos"><i class="fas fa-credit-card"></i> Pagos</li>
+                <li id="logout"><i class="fas fa-sign-out-alt"></i> Salir</li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+
+        <!-- Dashboard -->
+        <section id="dashboard" class="section active">
+            <h1>Panel General</h1>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Usuarios Activos</h3>
+                    <p>1,245</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Tickets Abiertos</h3>
+                    <p>23</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Ingresos del Mes</h3>
+                    <p>$18,450</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Servicios Activos</h3>
+                    <p>1,180</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usuarios -->
+        <section id="usuarios" class="section">
+            <h1>Gestión de Usuarios</h1>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Plan</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Juan Pérez</td>
+                        <td>juan@email.com</td>
+                        <td>800 Mbps</td>
+                        <td><span class="status active">Activo</span></td>
+                    </tr>
+                    <tr>
+                        <td>Laura Gómez</td>
+                        <td>laura@email.com</td>
+                        <td>400 Mbps</td>
+                        <td><span class="status suspended">Suspendido</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Tickets -->
+        <section id="tickets" class="section">
+            <h1>Tickets de Soporte</h1>
+
+            <div class="ticket-card">
+                <h3>Problema de conexión</h3>
+                <p>Cliente: Juan Pérez</p>
+                <button class="btn-resolver">Marcar como Resuelto</button>
+            </div>
+        </section>
+
+        <!-- Pagos -->
+        <section id="pagos" class="section">
+            <h1>Historial de Pagos</h1>
+            <p>Aquí se mostrarán los pagos procesados.</p>
+        </section>
+
+    </main>
+</div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>

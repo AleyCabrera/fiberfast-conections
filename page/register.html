@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Cuenta | Fiber Fast</title>
+    <link rel="stylesheet" href="/style/register.css">
+    <link rel="icon" href="/assets/img/favicon/fiberfast.ico" type="image/x-icon">
+    <!-- Fuentes de Google para usar con las variables CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Poppins:wght@400;500;600&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <main> <!-- Uso de <main> para el contenido principal -->
+        <div class="container">
+
+            <!-- LADO IZQUIERDO (FORMULARIO) -->
+            <div class="left">
+                <a href="/index.html">
+                    <img src="/assets/img/logo.png" class="logo" alt="Fiber Fast Logo">
+                </a>
+                
+
+                <h1 class="titulo">Crear Cuenta</h1>
+                <p class="subtitulo">Registro de usuarios Fiber Fast</p>
+
+                <form id="registroForm"> <!-- Añadido un ID para JS -->
+
+                    <!-- CAMPO NIC -->
+                    <label for="nic">NIC</label>
+                    <input type="text" id="nic" name="nic" placeholder="Ingrese su NIC" inputmode="numeric"
+                        pattern="[0-9]*" required>
+                    <!-- Podemos añadir un pequeño texto de ayuda -->
+                    <span class="field-error" id="error-nic"></span>
+
+                    <!-- CAMPO NOMBRE -->
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" name="nombre" placeholder="Ingrese su nombre" required>
+                    <span class="field-error" id="error-nombre"></span>
+
+                    <!-- CAMPO APELLIDO -->
+                    <label for="apellido">Apellido</label>
+                    <input type="text" id="apellido" name="apellido" placeholder="Ingrese su apellido" required>
+                    <span class="field-error" id="error-apellido"></span>
+
+                    <!-- CAMPO CORREO -->
+                    <label for="correo">Correo Electrónico</label>
+                    <input type="email" id="correo" name="correo" placeholder="ejemplo@correo.com" required>
+                    <span class="field-error" id="error-correo"></span>
+
+                    <!-- CAMPO TELÉFONO -->
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono" name="telefono" placeholder="Ej: 3001234567" inputmode="numeric"
+                        pattern="[0-9]{10}" required>
+                    <span class="field-error" id="error-telefono"></span>
+
+                    <!-- CAMPO CONTRASEÑA -->
+                    <label for="password">Contraseña</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Cree una contraseña" required>
+                        <button type="button" class="toggle-password" aria-label="Mostrar contraseña"
+                            data-target="password">👁️</button>
+                    </div>
+                    <span class="field-error" id="error-password"></span>
+
+                    <!-- CAMPO CONFIRMAR CONTRASEÑA -->
+                    <label for="confirm-password">Confirmar Contraseña</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirm-password" name="confirm-password"
+                            placeholder="Repita su contraseña" required>
+                        <button type="button" class="toggle-password" aria-label="Mostrar contraseña"
+                            data-target="confirm-password">👁️</button>
+                    </div>
+                    <span class="field-error" id="error-confirm-password"></span>
+
+                    <!-- TÉRMINOS Y CONDICIONES (MEJORADO) -->
+                    <div class="terms">
+                        <input type="checkbox" id="terminos" name="terminos" required>
+                        <label for="terminos">
+                            Acepto los <a href="/terminos-y-condiciones" target="_blank">términos y condiciones</a> y la
+                            <a href="/politica-privacidad" target="_blank">política de privacidad</a>. Al registrarme,
+                            confirmo que he leído y acepto los términos de uso del servicio Fiber Fast y autorizo el
+                            tratamiento de mis datos conforme a la normativa vigente.
+                        </label>
+                    </div>
+                    <span class="field-error" id="error-terminos"></span>
+
+                    <button type="submit" class="btn-register">Registrarme</button>
+
+                </form>
+            </div>
+
+            <!-- LADO DERECHO (VIDEO) - ESTILO LANDING PAGE -->
+            <div class="right">
+                <!-- Contenedor del video hero -->
+                <div class="right-hero-video">
+                    <video autoplay muted loop playsinline poster="/assets/img/hero-fallback.jpg">
+                        <source src="/assets/video/portal.mp4" type="video/mp4">
+                        Tu navegador no soporta la etiqueta de video.
+                    </video>
+                    <!-- Overlay con gradiente -->
+                    <div class="overlay"></div>
+                </div>
+            
+                <!-- Contenido de texto -->
+                <div class="right-content">
+                    <h2>Bienvenidos a</h2>
+                    <h1>Fiber Fast Portal Registros</h1>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    <script src="/js/register.js"></script> <!-- Enlace a nuestro futuro JS -->
+</body>
+
+</html>

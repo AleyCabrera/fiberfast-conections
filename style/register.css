@@ -1,0 +1,564 @@
+/* ===========================================
+    VARIABLES CSS - SISTEMA DE DISEÑO (Tuyas, sin cambios)
+=========================================== */
+:root {
+    /* Paleta de colores principal */
+    --primary-100: #E8E9F3;
+    --primary-200: #D1D3E7;
+    --primary-300: #A3A7CF;
+    --primary-400: #6B6FA3;
+    --primary-500: #4F528C;
+    --primary-600: #3A3D6B;
+    --primary-700: #2C2E50;
+    --primary-800: #1E1F38;
+    --primary-900: #14152A;
+
+    /* Colores secundarios y de acento */
+    --secondary-500: #F2C53D;
+    --secondary-600: #D9AF1F;
+    --accent-500: #25D366;
+    --accent-600: #128C7E;
+
+    /* Colores neutrales */
+    --neutral-50: #FAFAFA;
+    --neutral-100: #F8F9FA;
+    --neutral-200: #E9ECEF;
+    --neutral-300: #DEE2E6;
+    --neutral-400: #CED4DA;
+    --neutral-500: #ADB5BD;
+    --neutral-600: #6C757D;
+    --neutral-700: #495057;
+    --neutral-800: #343A40;
+    --neutral-900: #212529;
+
+    /* Colores semánticos */
+    --success: #28A745;
+    --warning: #FFC107;
+    --error: #DC3545;
+    --info: #17A2B8;
+
+    /* Sombras profesionales */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.2);
+
+    /* Bordes y radios */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 30px;
+    --radius-full: 9999px;
+
+    /* Espaciado consistente */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    --spacing-3xl: 4rem;
+
+    /* Transiciones */
+    --transition-fast: 150ms ease-in-out;
+    --transition-base: 300ms ease-in-out;
+    --transition-slow: 500ms ease-in-out;
+
+    /* Tipografía */
+    --font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Montserrat', var(--font-primary);
+    
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 2rem;
+    --font-size-4xl: 2.5rem;
+    --font-size-5xl: 3rem;
+
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Line heights */
+    --leading-tight: 1.2;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.7;
+
+    /* Z-index scale */
+    --z-base: 1;
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-fixed: 300;
+    --z-modal-backdrop: 400;
+    --z-modal: 500;
+    --z-popover: 600;
+    --z-tooltip: 700;
+}
+
+/* ===========================================
+    RESET Y BASE (Usando tus variables)
+=========================================== */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--neutral-100);
+    color: var(--neutral-800);
+    line-height: var(--leading-normal);
+}
+
+/* ===========================================
+    LAYOUT PRINCIPAL
+=========================================== */
+.container {
+    display: flex;
+    min-height: 100vh; /* Usamos min-height en lugar de height para mejor comportamiento en móvil */
+}
+
+/* LADO IZQUIERDO */
+.left {
+    width: 45%;
+    background: var(--neutral-50);
+    padding: var(--spacing-xl) var(--spacing-2xl);
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centra verticalmente el contenido */
+    overflow-y: auto;
+}
+
+.logo {
+    width: 120px;
+    margin-bottom: var(--spacing-lg);
+    align-self: center; /* Centra el logo horizontalmente */
+}
+
+.titulo {
+    align-self: center; /* Centra el título horizontalmente */
+    font-family: var(--font-heading);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--primary-800);
+    margin-bottom: var(--spacing-xs);
+    line-height: var(--leading-tight);
+}
+
+.subtitulo {
+    align-self: center; /* Centra el subtítulo horizontalmente */
+    color: var(--neutral-600);
+    margin-bottom: var(--spacing-xl);
+    font-size: var(--font-size-lg);
+}
+
+/* ===========================================
+    FORMULARIO - VERSIÓN COMPACTA
+=========================================== */
+form {
+    width: 100%;
+    max-width: 500px; /* Reducido ligeramente */
+    margin: 0 auto;
+}
+
+/* Reducir el espacio entre grupos de campos */
+.form-group {
+    margin-bottom: var(--spacing-sm); /* Control más fino del espaciado */
+}
+
+form label {
+    display: block;
+    margin-bottom: var(--spacing-xs); /* Reducido de sm a xs */
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--neutral-700);
+}
+
+/* Compactar los inputs */
+form input:not([type="checkbox"]) {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md); /* Reducido el padding vertical */
+    border: 1px solid var(--neutral-300);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-family: var(--font-primary);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    background-color: var(--neutral-50);
+    height: 42px; /* Altura fija para uniformidad */
+}
+
+/* Ajuste específico para textarea si lo hubiera */
+form textarea {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--neutral-300);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-family: var(--font-primary);
+}
+
+form input:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(79, 82, 140, 0.1);
+}
+
+/* Password wrapper ajustado */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: calc(var(--spacing-2xl) + 5px); /* Reducido el espacio para el botón */
+    height: 42px; /* Misma altura que los otros inputs */
+}
+
+.toggle-password {
+    position: absolute;
+    right: var(--spacing-sm); /* Reducido de md a sm */
+    background: none;
+    border: none;
+    font-size: var(--font-size-lg); /* Reducido tamaño del ícono */
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neutral-500);
+    transition: color var(--transition-fast);
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+}
+
+.toggle-password:hover {
+    color: var(--primary-600);
+    background-color: var(--neutral-200);
+}
+
+/* Estilos para los mensajes de error */
+.field-error {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--error);
+    margin-top: 2px; /* Reducido de xs a 2px */
+    min-height: 16px; /* Reducido para que ocupe menos espacio */
+    line-height: 1.3;
+}
+
+/* Términos y condiciones - más compacto */
+.terms {
+    margin: var(--spacing-md) 0; /* Reducido de lg a md */
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--neutral-600);
+}
+
+.terms input[type="checkbox"] {
+    flex-shrink: 0;
+    margin-top: 2px;
+    width: 16px; /* Reducido de 18px */
+    height: 16px; /* Reducido de 18px */
+    accent-color: var(--primary-500);
+    cursor: pointer;
+}
+
+.terms label {
+    margin: 0;
+    font-weight: var(--font-weight-regular);
+    color: var(--neutral-600);
+    line-height: 1.4; /* Ajustado para texto compacto */
+    font-size: var(--font-size-xs); /* Texto más pequeño para términos */
+}
+
+.terms a {
+    color: var(--primary-500);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    transition: color var(--transition-fast);
+}
+
+.terms a:hover {
+    color: var(--primary-700);
+    text-decoration: underline;
+}
+
+/* Botón de registro - ligeramente más compacto */
+.btn-register {
+    width: 100%;
+    background: var(--primary-500);
+    color: white;
+    border: none;
+    padding: var(--spacing-md) var(--spacing-lg); /* Reducido padding vertical */
+    font-size: var(--font-size-base); /* Reducido de lg a base */
+    font-weight: var(--font-weight-semibold);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    margin-top: var(--spacing-sm); /* Reducido de md a sm */
+    height: 44px; /* Altura fija para el botón */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-register:hover {
+    background: var(--primary-600);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.btn-register:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Agrupación visual de campos */
+.form-section {
+    background: var(--neutral-100);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--neutral-200);
+}
+
+.form-section-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--primary-700);
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--neutral-300);
+}
+
+/* Para campos en línea (2 columnas) */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+
+
+/* Ajuste para pantallas pequeñas */
+@media (max-width: 480px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 768px) {
+    form {
+        max-width: 100%;
+    }
+    
+    .left {
+        padding: var(--spacing-lg);
+    }
+    
+    .terms label {
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* ===========================================
+    LADO DERECHO (VIDEO) - ESTILO LANDING PAGE
+=========================================== */
+.right {
+    width: 55%;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--primary-900); /* Color de fondo por si el video tarda en cargar */
+}
+
+/* Contenedor del video hero */
+.right-hero-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Video */
+.right-hero-video video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background-color: var(--primary-900); /* Color de respaldo mientras carga */
+}
+
+/* Overlay con gradiente (exactamente como en la landing page) */
+.right-hero-video .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        135deg,
+        rgba(79, 82, 140, 0.9) 0%,    /* primary-500 con opacidad */
+        rgba(26, 26, 46, 0.95) 100%    /* primary-900 con opacidad */
+    );
+    z-index: 2; /* Encima del video */
+    pointer-events: none; /* El overlay no interfiere con clics */
+}
+
+/* Poster de respaldo (cuando el video no carga) */
+.right-hero-video video {
+    background-image: url('/assets/img/hero-fallback.jpg'); /* Ajusta la ruta según tu proyecto */
+    background-size: cover;
+    background-position: center;
+}
+
+/* Contenido de texto sobre el video */
+.right-content {
+    position: relative;
+    z-index: 3; /* Por encima del overlay y el video */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    padding: var(--spacing-2xl);
+}
+
+.right-content h2 {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--spacing-sm);
+    font-family: var(--font-heading);
+}
+
+.right-content h1 {
+    font-size: var(--font-size-5xl);
+    font-weight: var(--font-weight-bold);
+    font-family: var(--font-heading);
+    line-height: var(--leading-tight);
+    max-width: 600px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Opcional: Animación sutil para el video */
+.right-hero-video video {
+    animation: slowZoom 20s infinite alternate ease-in-out;
+}
+
+@keyframes slowZoom {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.05);
+    }
+}
+
+/* ===========================================
+    RESPONSIVO (Usando variables)
+=========================================== */
+@media (max-width: 1024px) {
+    .left {
+        padding: var(--spacing-xl);
+    }
+    
+    .overlay h1 {
+        font-size: var(--font-size-3xl);
+    }
+    
+    .overlay h2 {
+        font-size: var(--font-size-xl);
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .left, .right {
+        width: 100%;
+    }
+    
+    .left {
+        padding: var(--spacing-xl);
+        min-height: auto;
+        justify-content: flex-start;
+    }
+    
+    .right {
+        min-height: 400px; /* Altura fija para el video en móvil */
+        order: -1; /* El video aparece arriba en móviles */
+    }
+
+    .overlay h1 {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .overlay h2 {
+        font-size: var(--font-size-lg);
+    }
+    
+    .logo {
+        width: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .left {
+        padding: var(--spacing-lg);
+    }
+    
+    .titulo {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .subtitulo {
+        font-size: var(--font-size-base);
+    }
+    
+    form input:not([type="checkbox"]) {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .btn-register {
+        padding: var(--spacing-md);
+        font-size: var(--font-size-base);
+    }
+}
+
+/* Pequeño ajuste para pantallas muy altas */
+@media (min-height: 900px) {
+    .left {
+        justify-content: center;
+    }
+}

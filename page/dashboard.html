@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Portal del Usuario - FiberFast">
+<title>Portal del Usuario | FiberFast</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="icon" href="/img/logo.png">
+<link rel="stylesheet" href="/style/dashboard.css">
+</head>
+
+<body class="portal-body">
+
+<header class="portal-header">
+    <div class="container header-flex">
+
+        <div class="logo">
+            <img src="/img/logo.png" alt="FiberFast">
+        </div>
+
+        <nav class="portal-nav">
+            <a href="#dashboard" class="active">Dashboard</a>
+            <a href="#facturas">Facturación</a>
+            <a href="#soporte">Soporte</a>
+            <a href="#perfil">Perfil</a>
+        </nav>
+
+        <div class="user-actions">
+            <div class="user-badge">KC</div>
+            <button class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+
+    </div>
+</header>
+
+
+<main class="portal-main" id="dashboard">
+
+    <div class="container">
+
+        <div class="welcome-box">
+            <div>
+                <h1>Hola Kevin 👋</h1>
+                <p>Gestiona tu servicio FiberFast desde aquí</p>
+            </div>
+
+            <div class="plan-badge">
+                <span>Plan Activo</span>
+                <strong>800 Mbps</strong>
+            </div>
+        </div>
+
+
+        <!-- GRID -->
+        <div class="dashboard-grid">
+
+            <!-- Estado -->
+            <div class="card stat-card">
+                <div class="card-icon gradient">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div>
+                    <span>Saldo Pendiente</span>
+                    <h2>$45.000</h2>
+                </div>
+            </div>
+
+            <!-- Estado Servicio -->
+            <div class="card stat-card">
+                <div class="card-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <span>Estado del Servicio</span>
+                    <h2 class="text-success">Activo</h2>
+                </div>
+            </div>
+
+            <!-- Fecha corte -->
+            <div class="card stat-card">
+                <div class="card-icon warning">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div>
+                    <span>Próximo Corte</span>
+                    <h2>15 Octubre</h2>
+                </div>
+            </div>
+
+            <!-- Velocidad -->
+            <div class="card stat-card">
+                <div class="card-icon primary">
+                    <i class="fas fa-gauge-high"></i>
+                </div>
+                <div>
+                    <span>Velocidad Actual</span>
+                    <h2>750 Mbps</h2>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- FACTURACIÓN -->
+        <div class="card large-card">
+            <div class="card-header">
+                <h3>Última Factura</h3>
+                <button class="btn btn-primary" onclick="openPaymentModal()">
+                    Pagar Ahora
+                </button>
+            </div>
+
+            <div class="invoice-info">
+                <div>
+                    <span>Monto</span>
+                    <h2>$45.000</h2>
+                </div>
+                <div>
+                    <span>Estado</span>
+                    <h2 class="text-warning">Pendiente</h2>
+                </div>
+                <div>
+                    <span>Vencimiento</span>
+                    <h2>15 Octubre</h2>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- SOPORTE -->
+        <div class="card large-card">
+            <div class="card-header">
+                <h3>Soporte Técnico</h3>
+                <button class="btn btn-secondary" onclick="openSupportModal()">
+                    Crear Ticket
+                </button>
+            </div>
+
+            <p>Si tienes problemas de conexión o facturación, crea un ticket y nuestro equipo te responderá rápidamente.</p>
+        </div>
+
+    </div>
+
+</main>
+
+
+<!-- FOOTER -->
+<footer class="portal-footer">
+    <p>© 2026 FiberFast. Todos los derechos reservados.</p>
+</footer>
+
+
+<script src="/js/dashboard-client.js"></script>
+<script src="/js/dashboard-config.js"></script>
+</body>
+</html>
