@@ -2,68 +2,295 @@
  * ===========================================
  * FIBERFAST DASHBOARD - CLIENTE
  * Archivo principal de JavaScript
- * Versión: 2.0.0
+ * Versión: 3.0.0 - Conectado al Backend
  * ===========================================
  */
 
 class FiberFastDashboard {
     constructor() {
+        // Propiedades de estado
+        this.userData = null;
+        this.dashboardStats = null;
+        this.notifications = [];
+        this.currentTooltip = null;
+        this.refreshIntervals = [];
+        
         this.init();
     }
 
-    init() {
-        this.cacheDOM();
-        this.bindEvents();
-        this.initAnimations();
-        this.initCharts();
-        this.initTooltips();
-        this.initNotifications();
-        this.checkUserSession();
-        this.loadRealTimeData();
-        console.log('✅ Dashboard FiberFast inicializado correctamente');
+    /**
+     * ===========================================
+     * INICIALIZACIÓN PRINCIPAL
+     * ===========================================
+     */
+    async init() {
+        try {
+            // Verificar autenticación primero
+            const isAuthenticated = await this.checkAuthentication();
+            if (!isAuthenticated) {
+                return;
+            }
+
+            this.cacheDOM();
+            this.bindEvents();
+            
+            // Cargar datos del usuario y dashboard
+            await this.loadUserData();
+            
+            // Inicializar módulos
+            this.initAnimations();
+            this.initCharts();
+            this.initTooltips();
+            this.initNotifications();
+            this.initSessionMonitor();
+            this.startRealTimeUpdates();
+            
+            console.log('✅ Dashboard FiberFast inicializado correctamente');
+        } catch (error) {
+            console.error('❌ Error inicializando dashboard:', error);
+            this.showError('Error al cargar el dashboard. Por favor, recarga la página.');
+        }
     }
 
     /**
-     * Cache de elementos DOM
+     * ===========================================
+     * AUTENTICACIÓN Y SESIÓN
+     * ===========================================
      */
-    cacheDOM() {
-        this.$body = document.body;
-        this.$header = document.querySelector('.portal-header');
-        this.$navLinks = document.querySelectorAll('.portal-nav a');
-        this.$userBadge = document.querySelector('.user-badge');
-        this.$logoutBtn = document.querySelector('.btn-logout');
-        this.$cards = document.querySelectorAll('.card');
-        this.$welcomeBox = document.querySelector('.welcome-box');
-        this.$dashboardGrid = document.querySelector('.dashboard-grid');
+    
+    /**
+     * Verifica si el usuario está autenticado
+     */
+    async checkAuthentication() {
+        const token = localStorage.getItem('fiberfast_token');
+        
+        if (!token) {
+            this.redirectToLogin('Sesión no iniciada');
+            return false;
+        }
+
+        try {
+            // Verificar token con el backend
+            const response = await apiGet(API_CONFIG.AUTH.PROFILE);
+            if (!response.success) {
+                this.redirectToLogin('Sesión inválida');
+                return false;
+            }
+            return true;
+        } catch (error) {
+            console.error('Error verificando autenticación:', error);
+            if (error.message === 'Sesión expirada' || error.message.includes('401')) {
+                this.redirectToLogin('Sesión expirada');
+                return false;
+            }
+            return false;
+        }
     }
 
     /**
-     * Event Listeners
+     * Redirige al login
      */
-    bindEvents() {
-        // Navegación activa
-        this.$navLinks.forEach(link => {
-            link.addEventListener('click', (e) => this.handleNavClick(e));
+    redirectToLogin(reason = '') {
+        console.warn(`🔒 Redirigiendo al login: ${reason}`);
+        localStorage.removeItem('fiberfast_token');
+        localStorage.removeItem('fiberfast_user');
+        localStorage.removeItem('fiberfast_remember');
+        window.location.href = '/page/portal-cliente.html';
+    }
+
+    /**
+     * ===========================================
+     * CARGA DE DATOS
+     * ===========================================
+     */
+    
+    /**
+     * Carga todos los datos del usuario y dashboard
+     */
+    async loadUserData() {
+        try {
+            // Cargar perfil del usuario
+            const profile = await apiGet(API_CONFIG.AUTH.PROFILE);
+            if (profile.success) {
+                this.userData = profile.user;
+                this.updateUserUI(profile.user);
+            }
+
+            // Cargar estadísticas del dashboard
+            const stats = await apiGet(API_CONFIG.ADMIN.STATS);
+            if (stats.success) {
+                this.dashboardStats = stats.stats;
+                this.updateDashboardUI(stats.stats);
+            }
+
+            // Cargar tickets recientes
+            await this.loadRecentTickets();
+
+        } catch (error) {
+            console.error('Error cargando datos del dashboard:', error);
+            this.showError('Error al cargar los datos. Mostrando información local.');
+            
+            // Fallback a datos de prueba si hay error
+            this.loadFallbackData();
+        }
+    }
+
+    /**
+     * Carga tickets recientes para mostrar en el dashboard
+     */
+    async loadRecentTickets() {
+        try {
+            const response = await apiGet(API_CONFIG.TICKETS.MY_TICKETS);
+            if (response.success && response.tickets) {
+                const recentTickets = response.tickets.slice(0, 2);
+                this.updateTicketsUI(recentTickets);
+            }
+        } catch (error) {
+            console.warn('No se pudieron cargar los tickets:', error.message);
+        }
+    }
+
+    /**
+     * Carga datos de fallback si la API falla
+     */
+    loadFallbackData() {
+        console.log('📋 Cargando datos de fallback...');
+        
+        // Datos simulados para desarrollo
+        const fallbackUser = {
+            id: 1,
+            nombre: 'Usuario Demo',
+            email: 'demo@fiberfast.com.co',
+            telefono: '3001234567',
+            tipo_cliente: 'residencial'
+        };
+        
+        const fallbackStats = {
+            usuarios: { total: 1250, activos: 987 },
+            solicitudes: { total: 45, pendientes: 12 },
+            tickets: { total: 23, abiertos: 8 },
+            database: 'memory'
+        };
+        
+        this.updateUserUI(fallbackUser);
+        this.updateDashboardUI(fallbackStats);
+        this.showToast('Mostrando datos de demostración', 'warning');
+    }
+
+    /**
+     * ===========================================
+     * ACTUALIZACIÓN DE UI
+     * ===========================================
+     */
+    
+    /**
+     * Actualiza la interfaz con los datos del usuario
+     */
+    updateUserUI(user) {
+        // Actualizar nombre en el welcome
+        const welcomeTitle = document.querySelector('.welcome-box h1');
+        if (welcomeTitle) {
+            welcomeTitle.textContent = `Hola ${user.nombre} 👋`;
+        }
+
+        // Actualizar email en el welcome si existe
+        const welcomeSubtitle = document.querySelector('.welcome-box p');
+        if (welcomeSubtitle && user.email) {
+            welcomeSubtitle.textContent = `${user.email} • Cliente ${user.tipo_cliente || 'residencial'}`;
+        }
+
+        // Actualizar badge del usuario
+        const userBadge = document.querySelector('.user-badge');
+        if (userBadge) {
+            const initials = user.nombre
+                .split(' ')
+                .filter(n => n.length > 0)
+                .map(n => n[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 2);
+            userBadge.textContent = initials;
+            userBadge.title = user.nombre;
+        }
+
+        // Actualizar plan badge
+        const planBadge = document.querySelector('.plan-badge strong');
+        if (planBadge && this.dashboardStats) {
+            // Si tenemos datos de usuarios activos, mostrar algo relacionado
+            const activeUsers = this.dashboardStats.usuarios?.activos || 0;
+            planBadge.textContent = `${activeUsers} Activos`;
+        }
+    }
+
+    /**
+     * Actualiza el dashboard con estadísticas reales
+     */
+    updateDashboardUI(stats) {
+        if (!stats) return;
+
+        const statCards = document.querySelectorAll('.stat-card');
+        
+        // Mapear estadísticas a las cards
+        const statMappings = [
+            { icon: 'fa-wallet', label: 'Usuarios Activos', value: stats.usuarios?.activos || 0 },
+            { icon: 'fa-check-circle', label: 'Servicios Activos', value: stats.usuarios?.total || 0 },
+            { icon: 'fa-calendar-alt', label: 'Solicitudes', value: stats.solicitudes?.total || 0 },
+            { icon: 'fa-gauge-high', label: 'Tickets Abiertos', value: stats.tickets?.abiertos || 0 }
+        ];
+
+        statCards.forEach((card, index) => {
+            const valueEl = card.querySelector('h2');
+            const labelEl = card.querySelector('span');
+            
+            if (valueEl && index < statMappings.length) {
+                const targetValue = statMappings[index].value;
+                this.animateCounter(valueEl, targetValue);
+            }
+            
+            if (labelEl && index < statMappings.length) {
+                labelEl.textContent = statMappings[index].label;
+            }
         });
 
-        // Logout
-        if (this.$logoutBtn) {
-            this.$logoutBtn.addEventListener('click', (e) => this.handleLogout(e));
+        // Actualizar el badge del plan con el total de usuarios
+        const planBadge = document.querySelector('.plan-badge strong');
+        if (planBadge) {
+            const totalUsers = stats.usuarios?.total || 0;
+            planBadge.textContent = `${totalUsers} Usuarios`;
+        }
+    }
+
+    /**
+     * Actualiza la sección de tickets recientes
+     */
+    updateTicketsUI(tickets) {
+        const ticketsContainer = document.querySelector('.tickets-container');
+        if (!ticketsContainer) return;
+
+        if (!tickets || tickets.length === 0) {
+            ticketsContainer.innerHTML = `
+                <div class="no-tickets">
+                    <i class="fas fa-ticket-alt"></i>
+                    <p>No tienes tickets de soporte activos.</p>
+                </div>
+            `;
+            return;
         }
 
-        // User badge click (perfil)
-        if (this.$userBadge) {
-            this.$userBadge.addEventListener('click', () => this.toggleUserMenu());
-        }
-
-        // Scroll events
-        window.addEventListener('scroll', () => this.handleScroll());
-
-        // Resize events
-        window.addEventListener('resize', () => this.handleResize());
-
-        // Clicks externos para cerrar menús
-        document.addEventListener('click', (e) => this.handleOutsideClick(e));
+        ticketsContainer.innerHTML = tickets.map(ticket => `
+            <div class="ticket-card ${ticket.estado}">
+                <div class="ticket-header">
+                    <span class="ticket-id">#${ticket.id}</span>
+                    <span class="ticket-status ${ticket.estado}">
+                        ${this.getEstadoTexto(ticket.estado)}
+                    </span>
+                </div>
+                <div class="ticket-title">${this.escapeHtml(ticket.asunto)}</div>
+                <div class="ticket-date">
+                    ${new Date(ticket.created_at).toLocaleDateString('es-CO')}
+                </div>
+            </div>
+        `).join('');
     }
 
     /**
@@ -71,10 +298,10 @@ class FiberFastDashboard {
      * ANIMACIONES MEJORADAS
      * ===========================================
      */
+    
     initAnimations() {
         this.initScrollAnimations();
         this.initHoverAnimations();
-        this.initNumberCounters();
         this.initTypingEffect();
     }
 
@@ -82,6 +309,8 @@ class FiberFastDashboard {
      * Animaciones al hacer scroll (Intersection Observer)
      */
     initScrollAnimations() {
+        if (!('IntersectionObserver' in window)) return;
+
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -96,7 +325,6 @@ class FiberFastDashboard {
             });
         }, observerOptions);
 
-        // Observar todas las cards y elementos principales
         document.querySelectorAll('.card, .welcome-box, .invoice-info').forEach(el => {
             el.style.opacity = '0';
             observer.observe(el);
@@ -104,38 +332,35 @@ class FiberFastDashboard {
     }
 
     /**
-     * Efecto de contador para números (estadísticas)
+     * Animaciones hover avanzadas
      */
-    initNumberCounters() {
-        const counters = document.querySelectorAll('.stat-card h2');
-        
-        counters.forEach(counter => {
-            const target = parseInt(counter.innerText.replace(/[^0-9]/g, ''));
-            if (!isNaN(target)) {
-                this.animateCounter(counter, target);
-            }
+    initHoverAnimations() {
+        if (!this.$cards) return;
+
+        this.$cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => this.handleCardHover(e, card));
+            card.addEventListener('mouseleave', () => this.handleCardLeave(card));
         });
     }
 
-    animateCounter(element, target) {
-        let current = 0;
-        const increment = target / 50; // 50 pasos
-        const duration = 1500; // 1.5 segundos
-        const stepTime = duration / 50;
+    handleCardHover(e, card) {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
         
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= target) {
-                element.innerText = this.formatNumber(target);
-                clearInterval(timer);
-            } else {
-                element.innerText = this.formatNumber(Math.floor(current));
-            }
-        }, stepTime);
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+        
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = (y - centerY) / 20;
+        const rotateY = (centerX - x) / 20;
+        
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
     }
 
-    formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    handleCardLeave(card) {
+        card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
     }
 
     /**
@@ -143,12 +368,9 @@ class FiberFastDashboard {
      */
     initTypingEffect() {
         const welcomeText = document.querySelector('.welcome-box h1');
-        if (!welcomeText) return;
+        if (!welcomeText || !this.userData) return;
 
-        const originalText = welcomeText.innerText;
-        if (originalText.includes('👋')) return; // Ya tiene el emoji
-
-        const name = 'Kevin';
+        const name = this.userData.nombre || 'Usuario';
         const phrases = [
             `¡Hola ${name}! 👋`,
             `Bienvenido ${name} ✨`,
@@ -178,98 +400,110 @@ class FiberFastDashboard {
     }
 
     /**
-     * Animaciones hover avanzadas
-     */
-    initHoverAnimations() {
-        // Efecto de brillo en cards
-        this.$cards.forEach(card => {
-            card.addEventListener('mousemove', (e) => this.handleCardHover(e, card));
-            card.addEventListener('mouseleave', () => this.handleCardLeave(card));
-        });
-
-        // Efecto de partículas en botones
-        document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('mouseenter', (e) => this.createParticles(e, btn));
-        });
-    }
-
-    handleCardHover(e, card) {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        card.style.setProperty('--mouse-x', `${x}px`);
-        card.style.setProperty('--mouse-y', `${y}px`);
-        
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rotateX = (y - centerY) / 20;
-        const rotateY = (centerX - x) / 20;
-        
-        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
-    }
-
-    handleCardLeave(card) {
-        card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
-    }
-
-    createParticles(e, btn) {
-        for (let i = 0; i < 5; i++) {
-            const particle = document.createElement('span');
-            particle.className = 'btn-particle';
-            particle.style.left = e.clientX - btn.getBoundingClientRect().left + 'px';
-            particle.style.top = e.clientY - btn.getBoundingClientRect().top + 'px';
-            particle.style.animation = `particle 1s ease-out ${i * 0.1}s`;
-            btn.appendChild(particle);
-            
-            setTimeout(() => particle.remove(), 1000);
-        }
-    }
-
-    /**
      * ===========================================
-     * GRÁFICAS Y DATOS
+     * GRÁFICAS (Simplificadas pero funcionales)
      * ===========================================
      */
+    
     initCharts() {
         this.createSpeedChart();
-        this.createUsageChart();
-        this.createPaymentHistory();
     }
 
     createSpeedChart() {
+        const container = document.querySelector('[data-chart="speed"]');
+        if (!container) return;
+
         const canvas = document.createElement('canvas');
         canvas.id = 'speedChart';
-        canvas.width = 400;
-        canvas.height = 200;
-        
-        const card = document.querySelector('[data-chart="speed"]');
-        if (card) {
-            card.appendChild(canvas);
-            
-            // Datos de velocidad simulados
-            const ctx = canvas.getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-            gradient.addColorStop(0, 'rgba(79, 82, 140, 0.8)');
-            gradient.addColorStop(1, 'rgba(79, 82, 140, 0.1)');
-            
-            // Aquí iría la implementación real de Chart.js o similar
-            this.drawDummyChart(ctx, gradient);
+        canvas.width = container.clientWidth || 400;
+        canvas.height = 150;
+        canvas.style.width = '100%';
+        canvas.style.height = '150px';
+        container.appendChild(canvas);
+
+        // Dibujar gráfica simple con datos simulados
+        const ctx = canvas.getContext('2d');
+        this.drawSpeedChart(ctx, canvas.width, canvas.height);
+    }
+
+    drawSpeedChart(ctx, width, height) {
+        const padding = 30;
+        const chartWidth = width - padding * 2;
+        const chartHeight = height - padding * 2;
+        const points = 20;
+        const data = [];
+
+        // Generar datos simulados de velocidad
+        for (let i = 0; i < points; i++) {
+            const base = 600 + Math.sin(i / 3) * 200;
+            data.push(base + Math.random() * 100);
         }
-    }
 
-    drawDummyChart(ctx, gradient) {
-        // Implementación simplificada
+        // Limpiar
+        ctx.clearRect(0, 0, width, height);
+
+        // Dibujar gradiente de fondo
+        const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+        gradient.addColorStop(0, 'rgba(79, 82, 140, 0.3)');
+        gradient.addColorStop(1, 'rgba(79, 82, 140, 0.02)');
+
+        ctx.beginPath();
+        const maxValue = Math.max(...data) * 1.1;
+        const minValue = Math.min(...data) * 0.9;
+
+        data.forEach((value, index) => {
+            const x = padding + (index / (points - 1)) * chartWidth;
+            const y = padding + chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+
+        // Área bajo la curva
+        const lastX = padding + chartWidth;
+        const firstX = padding;
+        ctx.lineTo(lastX, padding + chartHeight);
+        ctx.lineTo(firstX, padding + chartHeight);
+        ctx.closePath();
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 400, 200);
-    }
+        ctx.fill();
 
-    createUsageChart() {
-        // Implementar gráfica de uso
-    }
+        // Dibujar línea
+        ctx.beginPath();
+        data.forEach((value, index) => {
+            const x = padding + (index / (points - 1)) * chartWidth;
+            const y = padding + chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+        ctx.strokeStyle = '#4F528C';
+        ctx.lineWidth = 2;
+        ctx.stroke();
 
-    createPaymentHistory() {
-        // Implementar historial de pagos
+        // Dibujar puntos
+        data.forEach((value, index) => {
+            const x = padding + (index / (points - 1)) * chartWidth;
+            const y = padding + chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#4F528C';
+            ctx.fill();
+        });
+
+        // Valor actual
+        const currentSpeed = Math.round(data[data.length - 1]);
+        ctx.fillStyle = '#4F528C';
+        ctx.font = 'bold 14px Poppins, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${currentSpeed} Mbps`, width - padding, padding - 10);
     }
 
     /**
@@ -277,6 +511,7 @@ class FiberFastDashboard {
      * TOOLTIPS Y POPOVERS
      * ===========================================
      */
+    
     initTooltips() {
         document.querySelectorAll('[data-tooltip]').forEach(element => {
             element.addEventListener('mouseenter', (e) => this.showTooltip(e));
@@ -308,13 +543,12 @@ class FiberFastDashboard {
 
     /**
      * ===========================================
-     * NOTIFICACIONES EN TIEMPO REAL
+     * NOTIFICACIONES
      * ===========================================
      */
+    
     initNotifications() {
-        this.notifications = [];
         this.createNotificationBell();
-        this.simulateRealtimeNotifications();
     }
 
     createNotificationBell() {
@@ -322,7 +556,7 @@ class FiberFastDashboard {
         bell.className = 'notification-bell';
         bell.innerHTML = `
             <i class="fas fa-bell"></i>
-            <span class="notification-badge">3</span>
+            <span class="notification-badge" id="notification-count">0</span>
         `;
         
         const userActions = document.querySelector('.user-actions');
@@ -331,6 +565,32 @@ class FiberFastDashboard {
         }
         
         bell.addEventListener('click', () => this.toggleNotifications());
+        
+        // Cargar notificaciones reales si existen
+        this.loadNotifications();
+    }
+
+    async loadNotifications() {
+        try {
+            // Intentar obtener notificaciones del backend
+            // Por ahora simulamos algunas
+            const mockNotifications = [
+                { id: 1, type: 'info', message: 'Bienvenido a FiberFast', time: 'Ahora' },
+                { id: 2, type: 'success', message: 'Tu servicio está activo', time: 'Hace 1 día' }
+            ];
+            
+            this.notifications = mockNotifications;
+            this.updateNotificationBadge();
+        } catch (error) {
+            console.warn('No se pudieron cargar notificaciones:', error.message);
+        }
+    }
+
+    updateNotificationBadge() {
+        const badge = document.getElementById('notification-count');
+        if (badge) {
+            badge.textContent = this.notifications.length || 0;
+        }
     }
 
     toggleNotifications() {
@@ -344,40 +604,34 @@ class FiberFastDashboard {
         panel.innerHTML = `
             <div class="notification-header">
                 <h4>Notificaciones</h4>
-                <button class="mark-all-read">✓ Marcar todas como leídas</button>
+                <button class="mark-all-read" id="mark-all-read">✓ Marcar todas como leídas</button>
             </div>
             <div class="notification-list">
-                ${this.generateNotificationItems()}
+                ${this.notifications.length === 0 ? 
+                    '<div class="no-notifications"><p>No tienes notificaciones</p></div>' :
+                    this.notifications.map(n => `
+                        <div class="notification-item ${n.type}">
+                            <div class="notification-content">
+                                <p>${this.escapeHtml(n.message)}</p>
+                                <small>${n.time}</small>
+                            </div>
+                        </div>
+                    `).join('')
+                }
             </div>
         `;
         
         document.body.appendChild(panel);
-        return panel;
-    }
-
-    generateNotificationItems() {
-        const notifications = [
-            { type: 'payment', message: 'Tu factura está próxima a vencer', time: '2 horas', icon: '💰' },
-            { type: 'speed', message: 'Velocidad mejorada a 800 Mbps', time: '1 día', icon: '⚡' },
-            { type: 'support', message: 'Ticket de soporte #1234 respondido', time: '2 días', icon: '🎫' }
-        ];
         
-        return notifications.map(n => `
-            <div class="notification-item ${n.type}">
-                <span class="notification-icon">${n.icon}</span>
-                <div class="notification-content">
-                    <p>${n.message}</p>
-                    <small>Hace ${n.time}</small>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    simulateRealtimeNotifications() {
-        // Simular notificaciones en tiempo real
-        setInterval(() => {
-            this.showToast('¡Nueva oferta! 50% de descuento en tu próximo mes');
-        }, 30000); // Cada 30 segundos
+        // Marcar como leídas
+        panel.querySelector('#mark-all-read')?.addEventListener('click', () => {
+            this.notifications = [];
+            this.updateNotificationBadge();
+            panel.classList.remove('visible');
+            this.showToast('Todas las notificaciones marcadas como leídas', 'success');
+        });
+        
+        return panel;
     }
 
     /**
@@ -385,6 +639,7 @@ class FiberFastDashboard {
      * TOAST NOTIFICATIONS
      * ===========================================
      */
+    
     showToast(message, type = 'info') {
         const toast = document.createElement('div');
         toast.className = `toast-notification ${type}`;
@@ -426,30 +681,29 @@ class FiberFastDashboard {
      * DATOS EN TIEMPO REAL
      * ===========================================
      */
-    loadRealTimeData() {
-        this.updateSpeedData();
-        this.updatePaymentData();
+    
+    startRealTimeUpdates() {
+        // Actualizar velocidad cada 30 segundos
+        const interval = setInterval(() => {
+            this.updateSpeedData();
+        }, 30000);
+        this.refreshIntervals.push(interval);
     }
 
     updateSpeedData() {
         const speedElement = document.querySelector('.stat-card:last-child h2');
         if (!speedElement) return;
         
-        // Simular actualización de velocidad
-        setInterval(() => {
-            const baseSpeed = 750;
-            const variation = Math.floor(Math.random() * 20) - 10;
-            const newSpeed = baseSpeed + variation;
-            speedElement.innerText = `${newSpeed} Mbps`;
-            
-            if (Math.abs(variation) > 5) {
-                this.showToast(`Velocidad actual: ${newSpeed} Mbps`, 'info');
-            }
-        }, 10000);
-    }
-
-    updatePaymentData() {
-        // Actualizar datos de pago
+        // Simular actualización de velocidad con datos realistas
+        const baseSpeed = 750;
+        const variation = Math.floor(Math.random() * 40) - 20;
+        const newSpeed = Math.max(100, baseSpeed + variation);
+        speedElement.innerText = `${newSpeed} Mbps`;
+        
+        // Mostrar notificación si hay cambio significativo
+        if (Math.abs(variation) > 15) {
+            this.showToast(`Velocidad actual: ${newSpeed} Mbps`, 'info');
+        }
     }
 
     /**
@@ -457,24 +711,34 @@ class FiberFastDashboard {
      * MANEJO DE SESIÓN
      * ===========================================
      */
-    checkUserSession() {
-        const lastActivity = localStorage.getItem('lastActivity');
-        const now = new Date().getTime();
+    
+    initSessionMonitor() {
+        this.lastActivity = Date.now();
         
-        if (lastActivity && (now - parseInt(lastActivity)) > 3600000) { // 1 hora
-            this.autoLogout();
-        }
-        
-        // Actualizar última actividad
-        document.addEventListener('mousemove', () => {
-            localStorage.setItem('lastActivity', now.toString());
+        // Monitorear actividad del usuario
+        const events = ['mousemove', 'keydown', 'click', 'scroll'];
+        events.forEach(event => {
+            document.addEventListener(event, () => {
+                this.lastActivity = Date.now();
+            });
         });
+        
+        // Verificar inactividad cada minuto
+        setInterval(() => {
+            const inactiveTime = Date.now() - this.lastActivity;
+            if (inactiveTime > 1800000) { // 30 minutos
+                this.autoLogout('Inactividad prolongada');
+            }
+        }, 60000);
     }
 
-    autoLogout() {
-        this.showToast('Sesión expirada por inactividad', 'warning');
+    autoLogout(reason = 'Sesión expirada') {
+        this.showToast(`🔒 ${reason}`, 'warning');
+        
         setTimeout(() => {
-            window.location.href = '/login';
+            localStorage.removeItem('fiberfast_token');
+            localStorage.removeItem('fiberfast_user');
+            window.location.href = '/page/portal-cliente.html';
         }, 3000);
     }
 
@@ -483,17 +747,54 @@ class FiberFastDashboard {
      * HANDLERS DE EVENTOS
      * ===========================================
      */
+    
+    cacheDOM() {
+        this.$body = document.body;
+        this.$header = document.querySelector('.portal-header');
+        this.$navLinks = document.querySelectorAll('.portal-nav a');
+        this.$userBadge = document.querySelector('.user-badge');
+        this.$logoutBtn = document.querySelector('.btn-logout');
+        this.$cards = document.querySelectorAll('.card');
+    }
+
+    bindEvents() {
+        // Navegación
+        this.$navLinks.forEach(link => {
+            link.addEventListener('click', (e) => this.handleNavClick(e));
+        });
+
+        // Logout
+        if (this.$logoutBtn) {
+            this.$logoutBtn.addEventListener('click', (e) => this.handleLogout(e));
+        }
+
+        // User badge
+        if (this.$userBadge) {
+            this.$userBadge.addEventListener('click', () => this.toggleUserMenu());
+        }
+
+        // Scroll
+        window.addEventListener('scroll', () => this.handleScroll());
+        window.addEventListener('resize', () => this.handleResize());
+
+        // Cerrar menús al hacer clic fuera
+        document.addEventListener('click', (e) => this.handleOutsideClick(e));
+        
+        // Tecla ESC para cerrar menús
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeAllMenus();
+            }
+        });
+    }
+
     handleNavClick(e) {
         e.preventDefault();
         const link = e.currentTarget;
         
-        // Remover active de todos
         this.$navLinks.forEach(l => l.classList.remove('active'));
-        
-        // Agregar active al clickeado
         link.classList.add('active');
         
-        // Scroll suave a la sección
         const targetId = link.getAttribute('href');
         if (targetId && targetId !== '#') {
             const targetElement = document.querySelector(targetId);
@@ -506,17 +807,21 @@ class FiberFastDashboard {
     handleLogout(e) {
         e.preventDefault();
         
-        // Mostrar confirmación
         if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
             this.showToast('Cerrando sesión...', 'info');
             
             // Limpiar localStorage
-            localStorage.removeItem('userSession');
+            localStorage.removeItem('fiberfast_token');
+            localStorage.removeItem('fiberfast_user');
+            localStorage.removeItem('fiberfast_remember');
             localStorage.removeItem('lastActivity');
+            
+            // Detener intervalos
+            this.refreshIntervals.forEach(interval => clearInterval(interval));
             
             // Redirigir al login
             setTimeout(() => {
-                window.location.href = '/login';
+                window.location.href = '/page/portal-cliente.html';
             }, 1500);
         }
     }
@@ -529,13 +834,21 @@ class FiberFastDashboard {
     createUserMenu() {
         const menu = document.createElement('div');
         menu.className = 'user-menu';
+        
+        const userName = this.userData?.nombre || 'Usuario';
+        const userEmail = this.userData?.email || '';
+        
         menu.innerHTML = `
+            <div class="user-menu-header">
+                <strong>${this.escapeHtml(userName)}</strong>
+                <small>${this.escapeHtml(userEmail)}</small>
+            </div>
             <ul>
-                <li><i class="fas fa-user"></i> Mi Perfil</li>
-                <li><i class="fas fa-cog"></i> Configuración</li>
-                <li><i class="fas fa-shield-alt"></i> Seguridad</li>
-                <li><i class="fas fa-question-circle"></i> Ayuda</li>
-                <li class="logout-menu"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</li>
+                <li data-action="profile"><i class="fas fa-user"></i> Mi Perfil</li>
+                <li data-action="settings"><i class="fas fa-cog"></i> Configuración</li>
+                <li data-action="security"><i class="fas fa-shield-alt"></i> Seguridad</li>
+                <li data-action="help"><i class="fas fa-question-circle"></i> Ayuda</li>
+                <li class="logout-menu" data-action="logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</li>
             </ul>
         `;
         
@@ -546,15 +859,33 @@ class FiberFastDashboard {
         menu.style.top = rect.bottom + 10 + 'px';
         menu.style.right = window.innerWidth - rect.right + 'px';
         
+        // Eventos de menú
+        menu.querySelectorAll('li[data-action]').forEach(item => {
+            item.addEventListener('click', () => {
+                const action = item.dataset.action;
+                if (action === 'logout') {
+                    this.handleLogout(new Event('click'));
+                } else if (action === 'profile') {
+                    this.showToast('Perfil de usuario', 'info');
+                } else if (action === 'settings') {
+                    this.showToast('Configuración', 'info');
+                } else if (action === 'security') {
+                    this.showToast('Seguridad', 'info');
+                } else if (action === 'help') {
+                    this.showToast('Ayuda disponible en nuestro sitio web', 'info');
+                }
+                menu.classList.remove('visible');
+            });
+        });
+        
         return menu;
     }
 
     handleOutsideClick(e) {
-        // Cerrar menús al hacer click fuera
         const userMenu = document.querySelector('.user-menu');
         const notificationPanel = document.querySelector('.notification-panel');
         
-        if (userMenu && !userMenu.contains(e.target) && !this.$userBadge.contains(e.target)) {
+        if (userMenu && !userMenu.contains(e.target) && !this.$userBadge?.contains(e.target)) {
             userMenu.classList.remove('visible');
         }
         
@@ -563,36 +894,88 @@ class FiberFastDashboard {
         }
     }
 
+    closeAllMenus() {
+        document.querySelectorAll('.user-menu, .notification-panel').forEach(el => {
+            el.classList.remove('visible');
+        });
+    }
+
     handleScroll() {
-        // Cambiar estilo del header al hacer scroll
-        if (window.scrollY > 50) {
-            this.$header.classList.add('header-scrolled');
-        } else {
-            this.$header.classList.remove('header-scrolled');
+        if (this.$header) {
+            if (window.scrollY > 50) {
+                this.$header.classList.add('header-scrolled');
+            } else {
+                this.$header.classList.remove('header-scrolled');
+            }
         }
     }
 
     handleResize() {
-        // Ajustar elementos responsivos
-        this.adjustForMobile();
+        // Reajustar gráfica si es necesario
+        const canvas = document.getElementById('speedChart');
+        if (canvas) {
+            const container = canvas.parentElement;
+            if (container) {
+                canvas.width = container.clientWidth || 400;
+            }
+        }
     }
 
-    adjustForMobile() {
-        if (window.innerWidth <= 768) {
-            document.querySelectorAll('.stat-card').forEach(card => {
-                card.classList.add('mobile-view');
-            });
-        } else {
-            document.querySelectorAll('.stat-card').forEach(card => {
-                card.classList.remove('mobile-view');
-            });
-        }
+    /**
+     * ===========================================
+     * UTILIDADES
+     * ===========================================
+     */
+    
+    animateCounter(element, target) {
+        if (!element || isNaN(target)) return;
+        
+        let current = 0;
+        const steps = 30;
+        const increment = target / steps;
+        const duration = 1000;
+        const stepTime = duration / steps;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                element.innerText = this.formatNumber(target);
+                clearInterval(timer);
+            } else {
+                element.innerText = this.formatNumber(Math.floor(current));
+            }
+        }, stepTime);
+    }
+
+    formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    getEstadoTexto(estado) {
+        const estados = {
+            'abierto': 'Abierto',
+            'en_proceso': 'En Proceso',
+            'resuelto': 'Resuelto',
+            'cerrado': 'Cerrado'
+        };
+        return estados[estado] || estado;
+    }
+
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    showError(message) {
+        this.showToast(`❌ ${message}`, 'error');
     }
 }
 
 /**
  * ===========================================
- * INICIALIZACIÓN CUANDO EL DOM ESTÉ LISTO
+ * INICIALIZACIÓN
  * ===========================================
  */
 if (document.readyState === 'loading') {

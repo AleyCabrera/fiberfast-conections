@@ -1,6 +1,6 @@
 /**
  * Módulo de Tickets de Soporte Técnico
- * Permite a los usuarios crear y gestionar solicitudes de soporte
+ * Conectado al backend de FiberFast
  */
 
 'use strict';
@@ -14,6 +14,7 @@ const TicketsModule = (function() {
     };
     
     let elements = {};
+    let currentTickets = [];
     
     /**
      * Inicializa el módulo
@@ -23,7 +24,7 @@ const TicketsModule = (function() {
         if (elements.modal) {
             attachEvents();
             cargarTickets();
-            console.log('✅ Módulo de tickets inicializado');
+            console.log('✅ Módulo de tickets inicializado (con API)');
         }
     }
     
@@ -82,103 +83,88 @@ const TicketsModule = (function() {
         if (elements.modal) {
             elements.modal.style.display = 'none';
             document.body.style.overflow = '';
+            elements.form?.reset();
         }
     }
     
     /**
-     * Maneja el envío del ticket
+     * Carga los tickets desde la API
      */
-    function handleSubmit(e) {
-        e.preventDefault();
-        
-        const ticket = {
-            id: Date.now(),
-            nombre: document.getElementById('ticket-nombre')?.value.trim(),
-            email: document.getElementById('ticket-email')?.value.trim(),
-            telefono: document.getElementById('ticket-telefono')?.value.trim(),
-            tipo: document.getElementById('ticket-tipo')?.value,
-            prioridad: document.getElementById('ticket-prioridad')?.value,
-            asunto: document.getElementById('ticket-asunto')?.value.trim(),
-            descripcion: document.getElementById('ticket-descripcion')?.value.trim(),
-            fecha: new Date().toISOString(),
-            estado: 'abierto'
-        };
-        
-        // Validar campos obligatorios
-        if (!ticket.nombre || !ticket.email || !ticket.asunto || !ticket.descripcion) {
-            mostrarMensaje('⚠️ Por favor completa todos los campos obligatorios.', 'error');
-            return;
-        }
-        
-        // Guardar ticket
-        guardarTicket(ticket);
-        
-        // Mostrar mensaje de éxito
-        mostrarMensaje('✅ ¡Ticket creado con éxito! Un técnico te contactará pronto.', 'success');
-        
-        // Cerrar modal y resetear formulario
-        cerrarModal();
-        elements.form.reset();
-        
-        // Actualizar lista de tickets
-        cargarTickets();
-    }
-    
-    /**
-     * Guarda ticket en localStorage
-     */
-    function guardarTicket(ticket) {
-        const tickets = JSON.parse(localStorage.getItem('fiberfast_tickets') || '[]');
-        tickets.unshift(ticket); // Agregar al inicio
-        localStorage.setItem('fiberfast_tickets', JSON.stringify(tickets));
-    }
-    
-    /**
-     * Carga y muestra los tickets del usuario
-     */
-    function cargarTickets() {
+    async function cargarTickets() {
         if (!elements.ticketsList) return;
         
-        const tickets = JSON.parse(localStorage.getItem('fiberfast_tickets') || '[]');
-        const userEmail = obtenerEmailUsuario();
+        try {
+            const token = localStorage.getItem('fiberfast_token');
+            
+            if (!token) {
+                mostrarTicketsLocales();
+                return;
+            }
+            
+            // Obtener tickets del usuario desde el backend
+            const response = await apiGet(API_CONFIG.TICKETS.MY_TICKETS);
+            
+            if (response.success) {
+                currentTickets = response.tickets || [];
+                renderTickets();
+                updateStats();
+            }
+        } catch (error) {
+            console.error('❌ Error cargando tickets:', error);
+            mostrarTicketsLocales();
+        }
+    }
+    
+    /**
+     * Muestra tickets locales como fallback
+     */
+    function mostrarTicketsLocales() {
+        const saved = localStorage.getItem('fiberfast_tickets');
+        currentTickets = saved ? JSON.parse(saved) : [];
+        renderTickets();
+        updateStats();
+    }
+    
+    /**
+     * Renderiza los tickets en la interfaz
+     */
+    function renderTickets() {
+        const container = elements.ticketsList;
+        if (!container) return;
         
-        // Filtrar tickets del usuario actual
-        const userTickets = userEmail ? tickets.filter(t => t.email === userEmail) : tickets.slice(0, 3);
-        
-        if (userTickets.length === 0) {
-            elements.ticketsList.innerHTML = `
+        if (currentTickets.length === 0) {
+            container.innerHTML = `
                 <div class="no-tickets">
                     <i class="fas fa-ticket-alt"></i>
-                    <p>No tienes tickets de soporte activos.</p>
+                    <h3>No hay tickets</h3>
+                    <p>Crea tu primer ticket de soporte para recibir asistencia técnica.</p>
                     <button class="btn btn-primary" data-open-ticket-modal>Crear Ticket</button>
                 </div>
             `;
             
             // Re-asignar evento al nuevo botón
-            const newBtn = document.querySelector('[data-open-ticket-modal]');
-            if (newBtn && !newBtn.hasListener) {
-                newBtn.addEventListener('click', () => abrirModal());
-                newBtn.hasListener = true;
+            const newBtn = container.querySelector('[data-open-ticket-modal]');
+            if (newBtn) {
+                newBtn.addEventListener('click', abrirModal);
             }
             return;
         }
         
-        // Mostrar tickets
-        elements.ticketsList.innerHTML = `
+        container.innerHTML = `
             <div class="tickets-header">
                 <h4>Mis Tickets de Soporte</h4>
                 <button class="btn btn-sm btn-primary" data-open-ticket-modal>+ Nuevo Ticket</button>
             </div>
             <div class="tickets-container">
-                ${userTickets.map(ticket => `
+                ${currentTickets.map(ticket => `
                     <div class="ticket-card ${ticket.estado}">
                         <div class="ticket-header">
                             <span class="ticket-id">#${ticket.id}</span>
-                            <span class="ticket-status ${ticket.estado}">${ticket.estado === 'abierto' ? 'Abierto' : 'Cerrado'}</span>
-                            <span class="ticket-priority ${ticket.prioridad}">${ticket.prioridad || 'Normal'}</span>
+                            <span class="ticket-status ${ticket.estado}">${getEstadoTexto(ticket.estado)}</span>
+                            <span class="ticket-priority ${ticket.prioridad || 'normal'}">${getPrioridadTexto(ticket.prioridad)}</span>
                         </div>
                         <div class="ticket-title">${escapeHtml(ticket.asunto)}</div>
-                        <div class="ticket-date">${new Date(ticket.fecha).toLocaleDateString('es-CO')}</div>
+                        <div class="ticket-date">${new Date(ticket.created_at || ticket.fecha).toLocaleDateString('es-CO')}</div>
                         <div class="ticket-type">
                             <i class="fas ${ticket.tipo === 'tecnico' ? 'fa-wrench' : ticket.tipo === 'facturacion' ? 'fa-file-invoice-dollar' : 'fa-question-circle'}"></i>
                             ${ticket.tipo === 'tecnico' ? 'Problema Técnico' : ticket.tipo === 'facturacion' ? 'Facturación' : 'Otros'}
@@ -189,19 +175,115 @@ const TicketsModule = (function() {
         `;
         
         // Re-asignar evento al nuevo botón
-        const newBtn = document.querySelector('[data-open-ticket-modal]');
-        if (newBtn && !newBtn.hasListener) {
-            newBtn.addEventListener('click', () => abrirModal());
-            newBtn.hasListener = true;
+        const newBtn = container.querySelector('[data-open-ticket-modal]');
+        if (newBtn) {
+            newBtn.addEventListener('click', abrirModal);
         }
     }
     
     /**
-     * Obtiene el email del usuario logueado (simulado)
+     * Actualiza las estadísticas
      */
-    function obtenerEmailUsuario() {
-        // En una implementación real, esto vendría de una sesión
-        return localStorage.getItem('user_email') || null;
+    function updateStats() {
+        const totalEl = document.getElementById('total-tickets');
+        const abiertosEl = document.getElementById('abiertos-tickets');
+        const cerradosEl = document.getElementById('cerrados-tickets');
+        
+        if (totalEl) {
+            totalEl.textContent = currentTickets.length;
+        }
+        
+        if (abiertosEl) {
+            const abiertos = currentTickets.filter(t => t.estado === 'abierto' || t.estado === 'en_proceso').length;
+            abiertosEl.textContent = abiertos;
+        }
+        
+        if (cerradosEl) {
+            const cerrados = currentTickets.filter(t => t.estado === 'cerrado' || t.estado === 'resuelto').length;
+            cerradosEl.textContent = cerrados;
+        }
+    }
+    
+    /**
+     * Maneja el envío del ticket
+     */
+    async function handleSubmit(e) {
+        e.preventDefault();
+        
+        const ticketData = {
+            nombre: document.getElementById('ticket-nombre')?.value.trim(),
+            email: document.getElementById('ticket-email')?.value.trim(),
+            telefono: document.getElementById('ticket-telefono')?.value.trim(),
+            tipo: document.getElementById('ticket-tipo')?.value || 'otros',
+            prioridad: document.getElementById('ticket-prioridad')?.value || 'normal',
+            asunto: document.getElementById('ticket-asunto')?.value.trim(),
+            descripcion: document.getElementById('ticket-descripcion')?.value.trim()
+        };
+        
+        // Validar campos obligatorios
+        if (!ticketData.nombre || !ticketData.email || !ticketData.asunto || !ticketData.descripcion) {
+            mostrarMensaje('⚠️ Por favor completa todos los campos obligatorios.', 'error');
+            return;
+        }
+        
+        // Mostrar loading
+        const submitBtn = elements.form?.querySelector('button[type="submit"]');
+        const originalText = submitBtn?.textContent;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        }
+        
+        try {
+            // Enviar al backend
+            const response = await apiPost(API_CONFIG.TICKETS.CREATE, ticketData);
+            
+            if (response.success) {
+                mostrarMensaje('✅ ¡Ticket creado con éxito! Un técnico te contactará pronto.', 'success');
+                cerrarModal();
+                elements.form?.reset();
+                
+                // Recargar tickets
+                await cargarTickets();
+            } else {
+                mostrarMensaje('❌ Error al crear el ticket: ' + (response.error || 'Intenta nuevamente'), 'error');
+            }
+        } catch (error) {
+            console.error('Error creando ticket:', error);
+            mostrarMensaje('❌ Error al crear el ticket. Por favor, intenta nuevamente.', 'error');
+        }
+        
+        // Restaurar botón
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    }
+    
+    /**
+     * Obtiene el texto del estado
+     */
+    function getEstadoTexto(estado) {
+        const estados = {
+            'abierto': 'Abierto',
+            'en_proceso': 'En Proceso',
+            'resuelto': 'Resuelto',
+            'cerrado': 'Cerrado'
+        };
+        return estados[estado] || estado;
+    }
+    
+    /**
+     * Obtiene el texto de prioridad
+     */
+    function getPrioridadTexto(prioridad) {
+        const prioridades = {
+            'baja': 'Baja',
+            'normal': 'Normal',
+            'alta': 'Alta',
+            'urgente': 'Urgente'
+        };
+        return prioridades[prioridad] || 'Normal';
     }
     
     /**
@@ -216,6 +298,8 @@ const TicketsModule = (function() {
             setTimeout(() => {
                 msgDiv.style.display = 'none';
             }, 5000);
+        } else {
+            alert(mensaje);
         }
     }
     
@@ -237,6 +321,7 @@ const TicketsModule = (function() {
     };
 })();
 
+// Exportar para uso global
 if (typeof window !== 'undefined') {
     window.TicketsModule = TicketsModule;
 }

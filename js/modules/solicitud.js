@@ -1,6 +1,6 @@
 /**
  * Módulo de Solicitud de Servicio
- * Maneja el formulario de contratación con validación y almacenamiento
+ * Conectado al backend de FiberFast
  */
 
 'use strict';
@@ -21,8 +21,8 @@ const SolicitudModule = (function() {
         cacheElements();
         if (elements.form) {
             attachEvents();
-            cargarPlanes();
-            console.log('✅ Módulo de solicitud inicializado');
+            cargarPlanesDesdeAPI();
+            console.log('✅ Módulo de solicitud inicializado (con API)');
         }
     }
     
@@ -43,24 +43,38 @@ const SolicitudModule = (function() {
     }
     
     /**
-     * Adjunta eventos
+     * Carga los planes desde la API
      */
-    function attachEvents() {
-        elements.form.addEventListener('submit', handleSubmit);
+    async function cargarPlanesDesdeAPI() {
+        if (!elements.plan) return;
         
-        // Validación en tiempo real
-        if (elements.telefono) {
-            elements.telefono.addEventListener('input', validarTelefono);
-        }
-        if (elements.email) {
-            elements.email.addEventListener('input', validarEmail);
+        try {
+            // Limpiar select actual
+            elements.plan.innerHTML = '<option value="">Selecciona un plan...</option>';
+            
+            // Obtener planes desde el backend
+            const response = await apiGet(API_CONFIG.PLANES.LIST);
+            
+            if (response.success && response.planes) {
+                response.planes.forEach(plan => {
+                    const option = document.createElement('option');
+                    option.value = plan.id;
+                    option.textContent = `${plan.nombre} - ${plan.velocidad} Mbps - $${plan.precio.toLocaleString()}/mes`;
+                    elements.plan.appendChild(option);
+                });
+                console.log('✅ Planes cargados desde el backend');
+            }
+        } catch (error) {
+            console.error('❌ Error cargando planes:', error);
+            // Fallback a planes locales si falla la API
+            cargarPlanesLocal();
         }
     }
     
     /**
-     * Carga los planes en el select
+     * Carga planes locales (fallback)
      */
-    function cargarPlanes() {
+    function cargarPlanesLocal() {
         if (!elements.plan) return;
         
         const planes = [
@@ -77,6 +91,21 @@ const SolicitudModule = (function() {
             option.textContent = plan.label;
             elements.plan.appendChild(option);
         });
+    }
+    
+    /**
+     * Adjunta eventos
+     */
+    function attachEvents() {
+        elements.form.addEventListener('submit', handleSubmit);
+        
+        // Validación en tiempo real
+        if (elements.telefono) {
+            elements.telefono.addEventListener('input', validarTelefono);
+        }
+        if (elements.email) {
+            elements.email.addEventListener('input', validarEmail);
+        }
     }
     
     /**
@@ -207,23 +236,24 @@ const SolicitudModule = (function() {
             telefono: elements.telefono.value.trim(),
             email: elements.email.value.trim(),
             direccion: elements.direccion.value.trim(),
-            plan: elements.plan.options[elements.plan.selectedIndex]?.text,
+            plan_interes: elements.plan.options[elements.plan.selectedIndex]?.text || '',
             mensaje: elements.mensaje?.value.trim() || '',
-            fecha: new Date().toISOString(),
-            estado: 'pendiente'
+            origen: 'landing'
         };
         
-        // Guardar localmente
-        guardarSolicitud(datos);
-        
-        // Intentar enviar a backend/servicio
-        const enviado = await enviarSolicitud(datos);
-        
-        if (enviado) {
-            mostrarMensajeGlobal('✅ ¡Solicitud enviada con éxito! Un asesor te contactará en menos de 24 horas.', 'success');
-            elements.form.reset();
-        } else {
-            mostrarMensajeGlobal('⚠️ Tu solicitud ha sido guardada. Te contactaremos pronto.', 'warning');
+        try {
+            // Enviar al backend
+            const response = await apiPost(API_CONFIG.SOLICITUDES.CREATE, datos);
+            
+            if (response.success) {
+                mostrarMensajeGlobal('✅ ¡Solicitud enviada con éxito! Un asesor te contactará en menos de 24 horas.', 'success');
+                elements.form.reset();
+            } else {
+                mostrarMensajeGlobal('❌ Error al enviar la solicitud: ' + (response.error || 'Intenta nuevamente'), 'error');
+            }
+        } catch (error) {
+            console.error('Error enviando solicitud:', error);
+            mostrarMensajeGlobal('❌ Error al enviar la solicitud. Por favor, intenta nuevamente.', 'error');
         }
         
         // Restaurar botón
@@ -232,43 +262,9 @@ const SolicitudModule = (function() {
     }
     
     /**
-     * Guarda solicitud en localStorage
-     */
-    function guardarSolicitud(datos) {
-        const solicitudes = JSON.parse(localStorage.getItem('fiberfast_solicitudes') || '[]');
-        datos.id = Date.now();
-        solicitudes.push(datos);
-        localStorage.setItem('fiberfast_solicitudes', JSON.stringify(solicitudes));
-    }
-    
-    /**
-     * Envía solicitud a servicio externo (Formspree o similar)
-     */
-    async function enviarSolicitud(datos) {
-        // Configura tu endpoint aquí (Formspree, Google Forms, o backend propio)
-        const FORMSPREE_ID = 'tu_id_aqui'; // Reemplazar con ID real de formspree.io
-        
-        if (FORMSPREE_ID !== 'tu_id_aqui') {
-            try {
-                const response = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datos)
-                });
-                return response.ok;
-            } catch (error) {
-                console.error('Error enviando solicitud:', error);
-                return false;
-            }
-        }
-        return true; // Simula éxito si no hay configuración
-    }
-    
-    /**
      * Muestra mensaje global
      */
     function mostrarMensajeGlobal(mensaje, tipo) {
-        // Usar el sistema de notificaciones existente o crear uno
         if (window.fiberFastApp && window.fiberFastApp.showNotification) {
             window.fiberFastApp.showNotification(mensaje, tipo);
         } else {
@@ -279,10 +275,11 @@ const SolicitudModule = (function() {
     // API pública
     return {
         init,
-        guardarSolicitud
+        cargarPlanesDesdeAPI
     };
 })();
 
+// Exportar para uso global
 if (typeof window !== 'undefined') {
     window.SolicitudModule = SolicitudModule;
 }
