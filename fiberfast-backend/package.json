@@ -1,0 +1,45 @@
+{
+  "name": "fiberfast-backend",
+  "version": "1.0.0",
+  "description": "Backend oficial para FiberFast Connections",
+  "main": "server.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "db:init": "node src/config/init-tables.js",
+    "db:seed": "node src/config/seed-data.js",
+    "test": "node tests/api/test-api.js",
+    "test:watch": "nodemon tests/api/test-api.js",
+    "test:unit": "echo 'Pruebas unitarias próximamente'"
+  },
+  "keywords": [
+    "fiberfast",
+    "internet",
+    "fibra-optica",
+    "backend"
+  ],
+  "author": "FiberFast Connections",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.18.1",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.11.0",
+    "mysql2": "^3.22.5",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
